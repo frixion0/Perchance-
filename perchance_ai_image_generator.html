@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Image Generator (Perchance via Proxy)</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+    input, button { padding: 10px; font-size: 16px; margin: 5px; }
+    img { max-width: 400px; margin-top: 20px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>AI Text-to-Image Generator</h1>
+  <input type="text" id="prompt" placeholder="Enter your prompt..." size="40" />
+  <button id="generateBtn">Generate</button>
+  <div id="results"></div>
+
+  <script>
+    async function fetchImage() {
+      const prompt = document.getElementById("prompt").value.trim();
+      if (!prompt) return alert("Please enter a prompt!");
+
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "Loading...";
+
+      const btn = document.getElementById("generateBtn");
+      btn.disabled = true;
+      btn.textContent = "Generating...";
+
+      try {
+        // Perchance generator name for AI text-to-image
+        const generatorName = "ai-text-to-image-generator";
+
+        // API endpoint
+        const apiUrl = `https://perchance.org/api/generateList.php?generator=${generatorName}&count=1&prompt=${encodeURIComponent(prompt)}`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+
+        const data = await response.json();
+
+        resultsDiv.innerHTML = "";
+
+        if (data && data.length > 0) {
+          const imgUrl = data[0]; // should be the generated image link
+          const img = document.createElement("img");
+          img.src = imgUrl;
+
+          // Download button
+          const downloadBtn = document.createElement("a");
+          downloadBtn.href = imgUrl;
+          downloadBtn.download = "generated-image.png";
+          downloadBtn.textContent = "Download Image";
+          downloadBtn.style.display = "block";
+          downloadBtn.style.marginTop = "10px";
+
+          resultsDiv.appendChild(img);
+          resultsDiv.appendChild(downloadBtn);
+        } else {
+          resultsDiv.textContent = "No image returned.";
+        }
+
+      } catch (err) {
+        console.error("Fetch error:", err);
+        resultsDiv.textContent = "Error: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate";
+      }
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", fetchImage);
+  </script>
+</body>
+</html>
